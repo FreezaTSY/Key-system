@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Gerar Key - Controle simples</title>
+</head>
+<body>
+  <h2>Gerar Key</h2>
+  <button onclick="gerarKey()">Gerar Key</button>
+  <pre id="resultadoGerar">Clique no botão para gerar sua key.</pre>
+
+  <script>
+    const API_URL = "https://script.google.com/macros/s/AKfycby2SM-l2ZfkgI9nPXkDitXJjGvBoQe74FwiBfjNqvwqFw6ESJg3vq_FyRz72tS4ifE/exec";
+    const STORAGE_KEY = "lastKeyData";
+
+    async function gerarKey() {
+      const display = document.getElementById("resultadoGerar");
+
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const data = JSON.parse(saved);
+        const now = Date.now();
+        if (new Date(data.expiry).getTime() > now) {
+          display.textContent = `Você já tem uma key ativa:\n${data.key}\nExpira em: ${data.expiry}`;
+          return; // bloqueia geração nova
+        }
+      }
+
+      display.textContent = "Gerando a key...";
+
+      try {
+        const res = await fetch(API_URL + "?action=generate");
+        const data = await res.json();
+
+        if (data.key) {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+          display.textContent = `Sua key é:\n${data.key}\nExpira em: ${data.expiry}`;
+        } else if (data.error) {
+          display.textContent = `Erro: ${data.error}`;
+        } else {
+          display.textContent = "Erro ao gerar a key.";
+        }
+      } catch (err) {
+        display.textContent = "Erro ao conectar com o servidor.";
+        console.error(err);
+      }
+    }
+  </script>
+</body>
+</html>
